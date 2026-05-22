@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[생명과학실험] 문헌 연구 중심 주제탐구 수업</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2.5rem 4rem;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 5;
+        }
+
+        .slide.title-slide {
+            background: linear-gradient(135deg, #0284c7 0%, #0f172a 100%);
+            text-align: center;
+        }
+
+        .slide.title-slide h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.05em;
+        }
+
+        .slide-header {
+            width: 100%;
+            max-width: 1250px;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #38bdf8;
+            padding-bottom: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .slide-header h2 {
+            font-size: 2.3rem;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 1250px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        strong { color: #f59e0b; }
+
+        .highlight-box {
+            background-color: rgba(30, 41, 59, 0.7);
+            border-left: 5px solid #38bdf8;
+            padding: 1rem 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin-top: 0.8rem;
+        }
+
+        /* 2컬럼 그리드 레이아웃 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr; 
+            gap: 2rem;
+            align-items: center;
+            width: 100%;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+
+        .method-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.2rem;
+            border-radius: 8px;
+            border-top: 4px solid #38bdf8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid #334155; }
+        th { background-color: #334155; color: #38bdf8; }
+
+        /* 기본 썸네일 이미지 스타일 */
+        .meme-img {
+            max-height: 65vh;
+            width: auto;
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            display: block;
+            margin: 0 auto;
+            cursor: zoom-in; /* 마우스를 올리면 돋보기 모양으로 변경 */
+            transition: transform 0.2s ease;
+        }
+
+        .meme-img:hover {
+            transform: scale(1.02); /* 살짝 커지는 효과 */
+        }
+
+        /* ✨ 투명 팝업창(라이트박스) 스타일 */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(15, 23, 42, 0.85); /* 반투명한 어두운 배경 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1000; /* 네비게이션바보다 위에 위치 */
+            cursor: zoom-out; /* 클릭하면 작아진다는 인터랙션 표시 */
+        }
+
+        /* 팝업 활성화 시 */
+        .popup-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 팝업 내 확대 이미지 스타일 */
+        .popup-img {
+            max-height: 90vh; /* 화면의 90%까지 대폭 확대 */
+            max-width: 90vw;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .popup-overlay.open .popup-img {
+            transform: scale(1); /* 부드럽게 커지는 애니메이션 */
+        }
+
+        .padlet-link-btn {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 1.8rem;
+            background-color: #0284c7;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            align-self: center;
+        }
+
+        .padlet-link-btn:hover { background-color: #0369a1; transform: translateY(-2px); }
+
+        .nav-controls {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .page-indicator { color: #94a3b8; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="slide-container">
+        
+        <div class="slide title-slide active">
+            <h1>[생명과학실험] 문헌 연구 중심<br>주제탐구 계획 수립하기</h1>
+            <p>실험실에서의 의문을 나만의 연구 질문으로 확장하기</p>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <h2>문헌 탐구의 장점과 필요성</h2>
+            </div>
+            <div class="slide-content">
+                <div class="content-grid">
+                    <div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th width="25%">구분</th>
+                                    <th>🧪 실험 위주</th>
+                                    <th>📚 문헌 연구</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>수준</strong></td>
+                                    <td>고교 실험실 환경 및 기자재의 한계 명확</td>
+                                    <td><strong>노력에 따라 수준의 제한이 없음</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>주도성</strong></td>
+                                    <td>지도교사의 개입과 도움이 많이 필요함</td>
+                                    <td><strong>자주적이고 독자적인 탐구 가능</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>설명력</strong></td>
+                                    <td>매뉴얼 중심이라 깊은 답변에 한계가 있음</td>
+                                    <td><strong>면접 등에서 스스로 설명하기 용이함</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top: 1.5rem; font-size: 1.1rem; color: #38bdf8;">
+                            ※ 양질의 실험탐구 1회, 문헌탐구 여러 번이 가장 이상적.
+                        </p>
+                    </div>
+                    <div>
+                        <img src="image_ec4b3d.png" alt="탐구 동기부여 이미지" class="meme-img" id="trigger-popup" onerror="this.style.display='none'; document.getElementById('meme-fallback').style.display='block';">
+                        <div id="meme-fallback" style="display:none; background:#334155; padding:5rem; text-align:center; border-radius:12px;">📚 [이미지 영역]<br>가독성을 위해 적정 크기로 배치했습니다.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <h2>오늘 수업은 어떻게 진행되나요?</h2>
+            </div>
+            <div class="slide-content">
+                <ul>
+                    <li><strong>1교시 (이론):</strong> 실험에서 출발하는 "왜? 어떻게?" 과학적 질문법 학습</li>
+                    <li><strong>2교시 (사례):</strong> 6대 기반 실험별 질문 발상 및 교과 개념 연계 사례 안내</li>
+                    <li><strong>자료조사 가이드:</strong> 탐구 질문을 해결해 줄 신뢰성 있는 소스 발굴 방법</li>
+                    <li><strong>3교시 (실습):</strong> 개인 디바이스로 패들릿(Padlet)에 탐구 계획서 초안 작성</li>
+                    <li><strong>4교시 (상호작용):</strong> 플랫폼에 등록된 계획서 기반 실시간 교사 피드백 및 수정</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <h2>단순 조사와 문헌탐구의 차이는 무엇인가?</h2>
+            </div>
+            <div class="slide-content">
+                <p style="margin-bottom: 1.5rem;">적절한 탐구 주제는 <strong>'왜', '어떻게', '어떤 영향이 있는가'</strong>와 같은 구조로 이루어져야 합니다.</p>
+                <div class="grid-2">
+                    <div style="background: rgba(56, 189, 248, 0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid #38bdf8;">
+                        <h3 style="color: #38bdf8; margin-bottom: 0.5rem;">지식 확인형 주제 (단순 조사)</h3>
+                        <p>• 이미 밝혀진 정의나 특징을 그대로 정리하는 형태</p>
+                        <p>• 예시: 전자현미경의 구조는 무엇인가?</p>
+                    </div>
+                    <div style="background: rgba(34, 197, 94, 0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid #22c55e;">
+                        <h3 style="color: #22c55e; margin-bottom: 0.5rem;">인과 분석형 주제 (문헌 탐구)</h3>
+                        <p>• 원인과 메커니즘, 변인 간의 관계를 분석하는 형태</p>
+                        <p>• 예시: <strong>왜</strong> 광학현미경은 전자현미경 수준의 분해능이 나오지 않는가?</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <h2>우리가 했던 실험에서 질문 끄집어내기</h2>
+            </div>
+            <div class="slide-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="25%">기반 실험</th>
+                            <th width="45%">탐구 질문 예시</th>
+                            <th width="30%">핵심 과학 개념</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>현미경 및 세포 관찰</strong></td>
+                            <td><strong>왜</strong> 광학현미경은 배율을 높여도 미세 소기관까지 선명하게 보지 못할까?</td>
+                            <td>가시광선, 분해능, 회절 현상</td>
+                        </tr>
+                        <tr>
+                            <td><strong>원형질 분리 & 삼투</strong></td>
+                            <td>동물세포 삼투 시, 외부 농도 변화는 용혈 현상에 <strong>어떤 영향을 미치는가?</strong></td>
+                            <td>팽압, 용혈 현상, 삼투압 변인</td>
+                        </tr>
+                        <tr>
+                            <td><strong>효소의 촉매작용</strong></td>
+                            <td>카탈레이스 효소는 환경(pH/중금속)에 의해 <strong>어떻게</strong> 활성을 잃는가?</td>
+                            <td>단백질 입체 구조, 최적 pH</td>
+                        </tr>
+                        <tr>
+                            <td><strong>효모의 발효</strong></td>
+                            <td>효모는 당의 분자 구조에 따라 <strong>어떻게</strong> 선택적으로 수송하며 속도 차이를 주는가?</td>
+                            <td>탄수화물 구조, 기질 특이성</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <h2>🔍 자료 조사 방법 가이드 (1): 문헌 및 기사</h2>
+            </div>
+            <div class="slide-content">
+                <div class="grid-2">
+                    <div class="method-card">
+                        <h3>📄 학술 논문</h3>
+                        <p>전문가들이 검증한 연구 자료입니다. <strong>'초록'</strong>과 <strong>'결론'</strong>을 먼저 읽어보세요.</p>
+                        <p style="color: #38bdf8; margin-top: 0.5rem;">✔ 활용: DBpia, RISS, 구글 학술검색</p>
+                    </div>
+                    <div class="method-card" style="border-top-color: #a855f7;">
+                        <h3>📰 뉴스 기사</h3>
+                        <p>내 탐구가 현재 사회에서 <strong>왜 중요한지(동기)</strong> 설명할 때 유용합니다.</p>
+                        <p style="color: #a855f7; margin-top: 0.5rem;">✔ 활용: 빅카인즈, 언론사 기획 보도</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <h2>📊 자료 조사 방법 가이드 (2): 데이터와 수집</h2>
+            </div>
+            <div class="slide-content">
+                <div class="grid-3">
+                    <div class="method-card" style="border-top-color: #22c55e;">
+                        <h3>📈 통계 데이터</h3>
+                        <p>객관적인 수치를 보여주는 증거입니다.</p>
+                        <p style="color: #22c55e; font-size: 1rem;">✔ 출처: 공공데이터포털, 질병관리청</p>
+                    </div>
+                    <div class="method-card" style="border-top-color: #eab308;">
+                        <h3>📝 설문조사</h3>
+                        <p>우리 학교 학생들을 대상으로 실태를 조사할 때 씁니다.</p>
+                        <p style="color: #eab308; font-size: 1rem;">✔ 도구: 구글 폼(Google Forms)</p>
+                    </div>
+                    <div class="method-card" style="border-top-color: #ec4899;">
+                        <h3>🏛️ 공공기관 리포트</h3>
+                        <p>보고서 형태로 되어 가독성이 좋습니다.</p>
+                        <p style="color: #ec4899; font-size: 1rem;">✔ 출처: 한국생명공학연구원</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <h2>📌 패들릿 기재 6대 양식 가이드</h2>
+            </div>
+            <div class="slide-content">
+                <div style="background: rgba(255,255,255,0.05); padding: 1.2rem; border-radius: 8px; font-size: 1.05rem; margin-bottom: 1rem; line-height: 1.6;">
+                    <p><strong>1. 나의 진로 / 2. 기반 실험 / 3. 탐구 질문</strong></p>
+                    <p><strong>4. 선정한 이유 / 5. 관련 교과 개념</strong></p>
+                    <p><strong>6. 활용할 자료 조사 방법</strong> (예: DBpia 논문 검색 및 통계 활용)</p>
+                </div>
+                
+                <a href="https://padlet.com/naturalscience1/5-23-warxsy9fdii93n7p" target="_blank" class="padlet-link-btn">
+                    🔗 우리 반 패들릿(Padlet) 바로가기 (작성 시작)
+                </a>
+            </div>
+        </div>
+
+        <div class="popup-overlay" id="image-lightbox">
+            <img src="image_ec4b3d.png" alt="확대된 이미지" class="popup-img">
+        </div>
+
+        <div class="nav-controls">
+            <button class="nav-btn" id="prev-btn">◀ 이전</button>
+            <span class="page-indicator" id="page-num">1 / 8</span>
+            <button class="nav-btn" id="next-btn">다음 ▶</button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const pageNum = document.getElementById('page-num');
+            
+            // 팝업 관련 DOM 변수
+            const triggerImg = document.getElementById('trigger-popup');
+            const lightbox = document.getElementById('image-lightbox');
+            
+            let currentSlideIndex = 0;
+            const totalSlides = slides.length;
+
+            function updateSlides() {
+                slides.forEach((slide, index) => {
+                    slide.classList.toggle('active', index === currentSlideIndex);
+                });
+                pageNum.textContent = `${currentSlideIndex + 1} / ${totalSlides}`;
+            }
+
+            function nextSlide() { if (currentSlideIndex < totalSlides - 1) { currentSlideIndex++; updateSlides(); } }
+            function prevSlide() { if (currentSlideIndex > 0) { currentSlideIndex--; updateSlides(); } }
+
+            nextBtn.addEventListener('click', (e) => { e.stopPropagation(); nextSlide(); });
+            prevBtn.addEventListener('click', (e) => { e.stopPropagation(); prevSlide(); });
+
+            // 팝업창 켜고 끄기 인터랙션
+            triggerImg.addEventListener('click', function(e) {
+                e.stopPropagation(); // 슬라이드 전파 방지
+                lightbox.classList.add('open');
+            });
+
+            lightbox.addEventListener('click', function() {
+                lightbox.classList.remove('open');
+            });
+
+            // 키보드 이벤트 (팝업이 켜져있을 땐 슬라이드 이동 막기)
+            document.addEventListener('keydown', (e) => {
+                if (lightbox.classList.contains('open')) {
+                    if (e.key === 'Escape') { // ESC 누르면 닫히게 설정
+                        lightbox.classList.remove('open');
+                    }
+                    return; // 팝업 오픈 시 화살표 이동 잠금
+                }
+
+                if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+            });
+
+            updateSlides();
+        });
+    </script>
+</body>
+</html>
